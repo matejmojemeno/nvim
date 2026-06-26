@@ -2,6 +2,7 @@ return {
 	"nvim-telescope/telescope.nvim",
 	event = "VimEnter",
 	branch = "0.1.x",
+	commit = "b4da76be54691e854d3e0e02c36b0245f945c2c7",
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 		{
@@ -75,8 +76,9 @@ return {
 		vim.keymap.set("n", "<leader>sr", builtin.resume, { desc = "[S]earch [R]esume" })
 		vim.keymap.set("n", "<leader>s.", builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
 
-		-- search the data/ directory with <leader>sd
-		vim.keymap.set("n", "<leader>sd", function()
+		-- search the data/ directory ([S]earch [D]ata) — capital D to avoid
+		-- clashing with <leader>sd ([S]earch [D]iagnostics) above
+		vim.keymap.set("n", "<leader>sD", function()
 			builtin.find_files({ cwd = "data/" })
 		end, { desc = "[S]earch [D]ata" })
 

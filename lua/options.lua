@@ -12,8 +12,14 @@ vim.opt.relativenumber = true
 -- Don't show current mode, because it is already in lualine
 vim.opt.showmode = false
 
--- Sync neovim and system clipboard
-vim.opt.clipboard = "unnamedplus"
+-- Sync clipboard between OS and Neovim.
+--  Schedule the setting after `UiEnter` because it can increase startup-time.
+vim.schedule(function()
+	vim.o.clipboard = "unnamedplus"
+end)
+
+-- Enable break indent
+vim.o.breakindent = true
 
 -- Show the sign column - the column to the left of the line numbers
 vim.opt.signcolumn = "yes"
@@ -28,6 +34,10 @@ vim.opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
 
 -- Preview substitutions live, as you type!
 vim.opt.inccommand = "split"
+
+-- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
+-- instead raise a dialog asking if you wish to save the current file(s)
+vim.o.confirm = true
 
 -- Search options
 vim.opt.ignorecase = true
@@ -67,7 +77,10 @@ vim.opt.isfname:append("@-@")
 -- Set the time in milliseconds to wait for a mapped sequence to complete
 vim.opt.updatetime = 50
 
--- Show a different colored column at 120 characters
+-- Decrease mapped sequence wait time
+vim.o.timeoutlen = 300
+
+-- Show a different colored column at 80 characters
 vim.opt.colorcolumn = "80"
 
 -- Minimum number of screen lines to keep above and below the cursor
@@ -87,8 +100,9 @@ vim.cmd("ca WQ wq")
 vim.cmd("ca Wq wq")
 vim.cmd("ca wQ wq")
 
--- Python provider ?
+-- Use the python3 on PATH for the Neovim python provider
 vim.g.python3_host_prog = vim.fn.exepath("python3")
-vim.g.loaded_python3_provider = nil
 
 vim.opt.formatoptions:remove("o")
+
+vim.g.c_syntax_for_h = 1

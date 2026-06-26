@@ -27,7 +27,8 @@ local function runNotif()
 	local cmd = "python " .. vim.fn.expand("%")
 	local output = vim.fn.system(cmd)
 
-	require("notify")(output)
+	-- routed through snacks.notifier (see plugins/snacks.lua)
+	vim.notify(output)
 end
 
 vim.keymap.set("n", "<leader>rr", runNotif, { desc = "Run Python file" })

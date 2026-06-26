@@ -1,40 +1,5 @@
 return {
 	{
-		"n-crespo/nvim-markdown",
-		lazy = true,
-		ft = "markdown",
-		config = function()
-			vim.g.vim_markdown_toc_autofit = 1
-			vim.keymap.set(
-				"n",
-				"<leader>m",
-				"<cmd>setlocal syn=markdown<cr>",
-				{ silent = false, desc = "Conceal Math", buffer = true }
-			)
-		end,
-		init = function()
-			vim.api.nvim_create_autocmd({ "FileType", "BufReadPost" }, {
-				pattern = { "*.md" },
-				callback = function()
-					vim.cmd([[
-        setlocal syn=markdown
-        ]])
-				end,
-			})
-		end,
-	},
-
-	-- {
-	-- 	"jbyuki/nabla.nvim",
-	-- 	keys = {
-	-- 		{ "<leader>ee", ':lua require"nabla".toggle_virt()<cr>' },
-	-- 		{ "<leader>eh", ':lua require"nabla",popup()<cr>' },
-	-- 	},
-	-- },
-
-	{ "ixru/nvim-markdown" },
-
-	{
 		"lukas-reineke/headlines.nvim",
 		dependencies = "nvim-treesitter/nvim-treesitter",
 		config = true, -- or `opts = {}`
@@ -80,5 +45,12 @@ return {
 			vim.api.nvim_create_user_command("PeekOpen", require("peek").open, {})
 			vim.api.nvim_create_user_command("PeekClose", require("peek").close, {})
 		end,
+	},
+	{
+		"sotte/presenting.nvim",
+		opts = {
+			width = 120,
+		},
+		cmd = { "Presenting" },
 	},
 }

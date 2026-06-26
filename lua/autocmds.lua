@@ -3,7 +3,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	desc = "Highlight when yanking (copying) text",
 	group = vim.api.nvim_create_augroup("highligh-yank", { clear = true }),
 	callback = function()
-		vim.highlight.on_yank()
+		vim.hl.on_yank()
 	end,
 })
 
@@ -17,43 +17,7 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
--- -- Set keymap only for markdown files
--- vim.api.nvim_create_autocmd("FileType", {
--- 	desc = "Set keymap for markdown files",
--- 	group = vim.api.nvim_create_augroup("keymap-markdown", { clear = true }),
--- 	pattern = { "markdown", "tex" },
--- 	callback = function()
--- 		vim.api.nvim_buf_set_keymap(
--- 			0,
--- 			"i",
--- 			"<Esc>",
--- 			"<Esc>: lua require('nabla').toggle_virt()<CR>: lua require('nabla').toggle_virt()<CR>",
--- 			{ noremap = true, silent = true, expr = false }
--- 		)
--- 	end,
--- })
-
--- vim.api.nvim_create_autocmd("FileType", {
--- 	desc = "Set wrap and number of columns for markdown files",
--- 	group = vim.api.nvim_create_augroup("wrap-markdown", { clear = true }),
--- 	pattern = { "markdown", "tex" },
--- 	callback = function()
--- 		vim.opt_local.wrap = true
--- 		vim.opt.colums = 86
--- 	end,
--- })
---
---
-
--- vim.api.nvim_create_augroup("TermOpen", {
--- 	desc = "Set keymap for small terminal",
--- 	group = vim.api.nvim_create_augroup("custom-termopen", { clear = true }),
--- 	callbac = function()
--- 		vim.opt.number = false
--- 		vim.opt.relativenumber = false
--- 	end,
--- })
-
+-- Open a small terminal split below
 vim.keymap.set("n", "<leader>st", function()
 	vim.cmd.vnew()
 	vim.cmd.term()
