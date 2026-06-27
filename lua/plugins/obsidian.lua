@@ -12,8 +12,8 @@ return {
 		require("obsidian").setup({
 			workspaces = {
 				{
-					name = "work-notes",
-					path = "~/Work/work-notes/",
+					name = "notes",
+					path = "~/Personal/notes/",
 				},
 			},
 
