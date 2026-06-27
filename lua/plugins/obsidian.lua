@@ -1,6 +1,5 @@
 return {
-	"epwalsh/obsidian.nvim",
-	enabled = true,
+	"obsidian-nvim/obsidian.nvim",
 	version = "*",
 	lazy = true,
 	ft = "markdown",
@@ -10,6 +9,10 @@ return {
 
 	config = function()
 		require("obsidian").setup({
+			-- Use the unified `:Obsidian <subcommand>` interface (the old
+			-- `:ObsidianTemplate` style is deprecated and removed in 4.0).
+			legacy_commands = false,
+
 			workspaces = {
 				{
 					name = "notes",
@@ -17,15 +20,14 @@ return {
 				},
 			},
 
-			disable_frontmatter = true,
+			-- Fork renamed `disable_frontmatter = true` to `frontmatter.enabled`.
+			frontmatter = {
+				enabled = false,
+			},
 
 			completion = {
+				-- The completion backend (blink.cmp / nvim-cmp) is auto-detected.
 				min_chars = 2,
-				blink_cmp = true,
-			},
-			ui = {
-				checkboxes = {},
-				bullets = {},
 			},
 		})
 	end,
