@@ -29,6 +29,11 @@ return {
 				-- The completion backend (blink.cmp / nvim-cmp) is auto-detected.
 				min_chars = 2,
 			},
+
+			-- Disable obsidian's in-buffer rendering; headlines.nvim handles that.
+			ui = {
+				enable = false,
+			},
 		})
 	end,
 }
