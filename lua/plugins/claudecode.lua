@@ -1,7 +1,19 @@
 return {
 	"coder/claudecode.nvim",
 	dependencies = { "folke/snacks.nvim" },
-	config = true,
+	opts = {
+		diff_opts = {
+			-- Review file changes in a dedicated, auto-focused tab instead of
+			-- extra splits beside the Claude terminal. <leader>aa (accept) /
+			-- <leader>ad (deny) close the tab and return you here. To tweak a
+			-- proposed change, just edit the right-hand buffer before accepting —
+			-- its current contents are what get saved.
+			open_in_new_tab = true,
+			hide_terminal_in_new_tab = true,
+			-- layout = "unified", -- swap to a single inline-diff window (note: the
+			-- side-by-side default is easier to edit before accepting)
+		},
+	},
 	cmd = {
 		"ClaudeCode",
 		"ClaudeCodeFocus",
