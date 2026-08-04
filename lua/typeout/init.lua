@@ -57,7 +57,7 @@ end
 
 function M.create_random_text(number_of_words)
 	local text = ""
-	local words = io.open("/Users/matej/.config/nvim/lua/typeout/words.txt", "r")
+	local words = io.open(vim.fn.stdpath("config") .. "/lua/typeout/words.txt", "r")
 	if not words then
 		print("File not found")
 		return

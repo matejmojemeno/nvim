@@ -45,6 +45,12 @@ vim.api.nvim_create_autocmd({ "TermOpen", "WinEnter", "BufEnter" }, {
 vim.api.nvim_create_autocmd("TermOpen", {
 	group = term_group,
 	callback = function(args)
+		-- Give bare `:terminal` buffers a filetype so lualine's terminal
+		-- extension styles them (snacks terminals already set their own).
+		if vim.bo[args.buf].filetype == "" then
+			vim.bo[args.buf].filetype = "terminal"
+		end
+
 		local ss = require("smart-splits")
 		local function jump(move)
 			return function()
