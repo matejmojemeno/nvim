@@ -15,7 +15,7 @@ vim.opt.showmode = false
 -- Sync clipboard between OS and Neovim.
 --  Schedule the setting after `UiEnter` because it can increase startup-time.
 vim.schedule(function()
-	vim.o.clipboard = "unnamedplus"
+    vim.o.clipboard = "unnamedplus"
 end)
 
 -- Enable break indent
@@ -81,7 +81,7 @@ vim.opt.updatetime = 50
 vim.o.timeoutlen = 300
 
 -- Show a different colored column at 80 characters
-vim.opt.colorcolumn = "80"
+vim.opt.colorcolumn = "100"
 
 -- Minimum number of screen lines to keep above and below the cursor
 vim.opt.scrolloff = 10

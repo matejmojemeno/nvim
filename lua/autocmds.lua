@@ -7,6 +7,71 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	end,
 })
 
+-- Set `colorcolumn` for Python buffers from the project's own configured line
+-- length (never a hardcoded global), as a visual guide only: `textwidth`/
+-- `formatoptions+=t` are deliberately never touched here, so nothing
+-- auto-wraps as you type and fights `ruff format` (see plugins/format.lua).
+do
+	-- Ruff resolves `ruff.toml`/`.ruff.toml` before `pyproject.toml` when both
+	-- exist, and reads `pyproject.toml`'s line-length only from `[tool.ruff]`
+	-- (a `[tool.black]`/other table's `line-length` in the same file must not
+	-- count). This is a light regex scrape, not a full TOML parser, but it
+	-- covers the common single-line `line-length = N` form either config uses.
+	local RUFF_DEFAULT_LINE_LENGTH = 88
+
+	local function read_line_length(path, section_pattern)
+		local ok, lines = pcall(vim.fn.readfile, path)
+		if not ok then
+			return nil
+		end
+		local text = table.concat(lines, "\n")
+		if section_pattern then
+			text = text:match(section_pattern)
+			if not text then
+				return nil
+			end
+		end
+		local n = text:match("[Ll]ine%-[Ll]ength%s*=%s*(%d+)")
+		return n and tonumber(n) or nil
+	end
+
+	local function project_line_length(start_path)
+		local ruff_toml = vim.fs.find({ "ruff.toml", ".ruff.toml" }, { path = start_path, upward = true })[1]
+		if ruff_toml then
+			local n = read_line_length(ruff_toml)
+			if n then
+				return n
+			end
+		end
+
+		local pyproject = vim.fs.find("pyproject.toml", { path = start_path, upward = true })[1]
+		if pyproject then
+			-- Scope to the `[tool.ruff]` table: up to the next top-level/nested
+			-- `[...]` header, or end of file if `[tool.ruff]` is the last table.
+			local n = read_line_length(pyproject, "%[tool%.ruff%][^\n]*\n(.-)\n%[")
+				or read_line_length(pyproject, "%[tool%.ruff%][^\n]*\n(.*)$")
+			if n then
+				return n
+			end
+		end
+
+		return RUFF_DEFAULT_LINE_LENGTH
+	end
+
+	vim.api.nvim_create_autocmd("FileType", {
+		desc = "Set colorcolumn from the project's ruff line-length (visual guide only)",
+		group = vim.api.nvim_create_augroup("python-ruff-colorcolumn", { clear = true }),
+		pattern = "python",
+		callback = function(args)
+			local dirname = vim.fs.dirname(vim.api.nvim_buf_get_name(args.buf))
+			local line_length = project_line_length(dirname)
+			-- Mark the column just past the limit, matching how black/ruff
+			-- describe "line length": the Nth column is still allowed.
+			vim.opt_local.colorcolumn = tostring(line_length + 1)
+		end,
+	})
+end
+
 -- Use spellcheck for markdown files
 vim.api.nvim_create_autocmd("FileType", {
 	desc = "Enable spellcheck for markdown files",
@@ -16,14 +81,6 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.opt_local.spell = true
 	end,
 })
-
--- Open a small terminal split below
-vim.keymap.set("n", "<leader>st", function()
-	vim.cmd.vnew()
-	vim.cmd.term()
-	vim.cmd.wincmd("J")
-	vim.api.nvim_win_set_height(0, 5)
-end)
 
 -- Terminal conveniences (e.g. the Claude Code pane)
 local term_group = vim.api.nvim_create_augroup("terminal-conveniences", { clear = true })

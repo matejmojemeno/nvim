@@ -11,10 +11,5 @@ return {
 		opts = { signs = false },
 	},
 
-	{
-		"norcalli/nvim-colorizer.lua",
-		config = function()
-			require("colorizer").setup()
-		end,
-	},
+	--{ -- norcalli/nvim-colorizer.lua is unmaintained and still calls the deprecated vim.tbl_flatten internally, causing a startup warning. NvChad's fork is the actively maintained continuation and a drop-in replacement (same setup() API). "NvChad/nvim-colorizer.lua", config = function() require("colorizer").setup() end, },
 }

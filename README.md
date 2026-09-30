@@ -49,6 +49,5 @@ matching feature:
 - `lua/options.lua`, `lua/remap.lua`, `lua/autocmds.lua` — core settings
 - `lua/plugins/*.lua` — one file per plugin (or small group)
 - `after/ftplugin/*.lua` — per-filetype overrides
-- `lua/typeout/` — a built-in typing game (`<leader>T`)
 
 [lazy.nvim]: https://github.com/folke/lazy.nvim

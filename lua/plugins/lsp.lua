@@ -26,6 +26,31 @@ return {
 			"saghen/blink.cmp",
 		},
 		config = function()
+			-- Resolve the `ruff` binary to launch the LSP with: prefer the active
+			-- venv/conda env, then a project-local `.venv`/`venv` under root_dir,
+			-- and fall back to whatever `ruff` mason.nvim put on $PATH. Mirrors the
+			-- resolver conform.nvim uses for `ruff format`/`ruff check --fix` in
+			-- plugins/format.lua, so the LSP diagnostics and the on-save
+			-- formatting always come from the same ruff install.
+			local function ruff_lsp_bin(root_dir)
+				local env_prefix = vim.env.VIRTUAL_ENV or vim.env.CONDA_PREFIX
+				if env_prefix then
+					local bin = env_prefix .. "/bin/ruff"
+					if vim.fn.executable(bin) == 1 then
+						return bin
+					end
+				end
+				if root_dir then
+					for _, dir in ipairs({ ".venv", "venv" }) do
+						local bin = root_dir .. "/" .. dir .. "/bin/ruff"
+						if vim.fn.executable(bin) == 1 then
+							return bin
+						end
+					end
+				end
+				return "ruff"
+			end
+
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("lsp-attach", { clear = true }),
 				callback = function(event)
@@ -35,7 +60,47 @@ return {
 					end
 
 					map("gd", require("telescope.builtin").lsp_definitions, "[g]oto [d]efinition")
-					map("gr", require("telescope.builtin").lsp_references, "[g]oto [r]eferences")
+
+					-- Both restrict/filter LSP references by whether the file looks
+					-- like a test (path contains "test"/"spec"). `on_list` (nvim
+					-- 0.10+) lets us filter before display instead of the default
+					-- quickfix/telescope handler.
+					local function is_test_file(filename)
+						local fname = (filename or ""):lower()
+						return fname:find("test", 1, true) ~= nil or fname:find("spec", 1, true) ~= nil
+					end
+
+					local function references_matching(keep, empty_msg, title)
+						return function()
+							vim.lsp.buf.references(nil, {
+								on_list = function(list)
+									local items = vim.tbl_filter(function(item)
+										return keep(is_test_file(item.filename))
+									end, list.items)
+
+									if #items == 0 then
+										vim.notify(empty_msg, vim.log.levels.WARN)
+										return
+									end
+
+									vim.fn.setqflist({}, " ", { title = title, items = items })
+									require("telescope.builtin").quickfix({ prompt_title = title })
+								end,
+							})
+						end
+					end
+
+					map("gr", references_matching(function(is_test)
+						return not is_test
+					end, "[g]oto [r]eferences: none found (outside tests)", "References"), "[g]oto [r]eferences")
+
+					map(
+						"gt",
+						references_matching(function(is_test)
+							return is_test
+						end, "[g]et [t]est references: none found", "Test References"),
+						"[g]et [t]est references"
+					)
 					map("gi", require("telescope.builtin").lsp_implementations, "[g]oto [i]mplementation")
 					map("<leader>d", require("telescope.builtin").lsp_type_definitions, "type [d]efinition")
 					map("<leader>ds", require("telescope.builtin").lsp_document_symbols, "[d]ocument [s]ymbols")
@@ -138,13 +203,34 @@ return {
 			local servers = {
 				pyright = {
 					-- pyright handles type-checking only; ruff lints, conform formats.
-					root_markers = { "pyproject.toml", "setup.py", "setup.cfg", ".venv", ".git" },
+					--
+					-- Marker order is priority order (highest first). `.git` leads on
+					-- purpose: in a monorepo where every subdir has its own
+					-- pyproject.toml, rooting at the subdir limits workspace/symbol
+					-- (<leader>sc) to that one package. Rooting at the git root makes
+					-- the whole repo searchable, at the cost of indexing more.
+					root_markers = { ".git", "pyproject.toml", "setup.py", "setup.cfg", ".venv" },
 				},
 
 				-- ruff is the single source of Python *linting* (diagnostics + code
 				-- actions). Running ruff only here (and not also via nvim-lint) is what
-				-- prevents duplicate diagnostics.
+				-- prevents duplicate diagnostics. Formatting itself runs through
+				-- conform.nvim (see plugins/format.lua), not this server.
 				ruff = {
+					-- Same priority order as pyright above, and the same set of files
+					-- `ruff` itself would walk up to find (ruff.toml/.ruff.toml take
+					-- precedence over pyproject.toml when both exist).
+					root_markers = { ".git", "ruff.toml", ".ruff.toml", "pyproject.toml" },
+					-- Run the project's own `ruff` (active venv/conda env, or a
+					-- project-local .venv/venv), falling back to the global one on
+					-- $PATH, and start it with cwd = the resolved project root so
+					-- its own config discovery walks up from there. `root_dir` on
+					-- `config` here is already resolved from `root_markers` above by
+					-- the time this runs (see :h lsp-config-merge / :h vim.lsp.Config).
+					cmd = function(dispatchers, config)
+						local bin = ruff_lsp_bin(config.root_dir)
+						return vim.lsp.rpc.start({ bin, "server" }, dispatchers, { cwd = config.root_dir })
+					end,
 					on_attach = function(client)
 						-- Let pyright own hover so we don't get two hover popups.
 						client.server_capabilities.hoverProvider = false
@@ -197,10 +283,12 @@ return {
 			end
 
 			-- Install the servers/tools that come from Mason (julials is installed
-			-- via Julia's own package manager, so it's excluded here). isort/mypy were
-			-- dropped: ruff handles import sorting, pyright handles type-checking.
+			-- via Julia's own package manager, so it's excluded here). isort/mypy/black
+			-- were dropped: ruff is the only Python formatter and linter (it handles
+			-- import sorting too, when a project's config enables that rule), pyright
+			-- handles type-checking.
 			require("mason-tool-installer").setup({
-				ensure_installed = { "pyright", "ruff", "lua_ls", "clangd", "black" },
+				ensure_installed = { "pyright", "ruff", "lua_ls", "clangd" },
 			})
 
 			-- mason-lspconfig only manages installation here; we enable servers
